@@ -1,5 +1,6 @@
+<!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, onUpdated, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, onUpdated, reactive, ref, useTemplateRef, watch } from 'vue';
 import ComponentExample from './ComponentsExample.vue';
 import useMouse from './ComposablesExample';
 
@@ -74,6 +75,9 @@ watch(myvar, (val, oldval) => {
 
 // 组合式函数的使用
 const {x,y} = useMouse()
+
+// 组件Ref
+const posRef = useTemplateRef('position')
 
 </script>
 
@@ -176,7 +180,7 @@ const {x,y} = useMouse()
       This is Content.
     </ComponentExample>
 
-    <div>
+    <div ref="position">
       x:{{ x }},y:{{ y }}
     </div>
 

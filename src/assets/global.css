@@ -1,8 +1,47 @@
+@font-face {
+    font-family: 'sans';
+    src: url("./fonts/sans/SourceHanSansCN-Light.otf") format('opentype');
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: 'sans';
+    src: url("./fonts/sans/SourceHanSansCN-Regular.otf") format('opentype');
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'sans';
+    src: url("./fonts/sans/SourceHanSansCN-Medium.otf") format('opentype');
+    font-weight: 500;
+}
+
+
+
+@font-face {
+    font-family: 'sans';
+    src: url("./fonts/sans/SourceHanSansCN-Bold.otf") format('opentype');
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: 'sans';
+    src: url("./fonts/sans/SourceHanSansCN-Heavy.otf") format('opentype');
+    font-weight: 900;
+}
+
+@font-face {
+    font-family: 'pmzd';
+    src: url("./fonts/pmzd.ttf");
+}
+
 
 :root {
     --header-height: 80px;
 
     --box-color: rgba(34, 35, 35);
+    --brighter-box-color: rgb(45, 46, 46);
     --theme-color: #6b0fff;
     --important-color: #ff9900;
 }
+

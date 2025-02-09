@@ -1,21 +1,27 @@
 <script setup lang="ts">
 import AppHeader from './views/AppHeader.vue';
+import { darkTheme, NConfigProvider, NModal } from 'naive-ui'
 import './assets/global.css'
-//import VueExample from "./views/examples/VueExample.vue"
+import { useUserStore } from './stores/user';
+import UserLogin from './views/user/UserLogin.vue';
 
-const themeOverrides = {
-    common: {
-      primaryColor: '#c5347d'
-    }
-}
+// const themeOverrides = {
+//     common: {
+//       primaryColor: '#c5347d'
+//     }
+// }
 
+//const userStore = useUserStore()
 
 </script>
 
 <template>
-  <NConfigProvider :theme-overrides="themeOverrides">
+  <NConfigProvider :theme="darkTheme">
+    <UserLogin></UserLogin>
     <AppHeader></AppHeader>
+
     <RouterView class="router-view"></RouterView>
+
 
   </NConfigProvider>
 

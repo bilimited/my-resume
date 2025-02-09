@@ -11,8 +11,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
-// hljs.registerLanguage('md',markdown)
-// hljs.registerLanguage('js',javascript)
+
 
 const app = createApp(App)
 
