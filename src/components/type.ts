@@ -1,9 +1,8 @@
-import type { RootContent, RootContentMap } from "mdast"
+import type { RootContentMap } from "mdast"
 
-
-interface NodeExtend{
-  isUnderH1?:boolean,
-  blockType?:keyof RootContentMap[]
+declare module 'mdast' {
+  interface Node {
+    isUnderH1?:boolean,
+    blockType?:keyof RootContentMap[]
+  }
 }
-
-export type ExtendedRootContent = RootContent & NodeExtend

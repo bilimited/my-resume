@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { useResumeSrcStore } from '@/stores/resume';
 import hashIt from 'hash-it';
-import type { RootContent } from 'mdast';
+import type { Parent, Root, RootContent } from 'mdast';
 import { computed, ref, useTemplateRef, watch } from 'vue';
-import type { ExtendedRootContent } from './type';
 import { useResumeStyleStore } from '@/stores/resumr_style';
 import type { TextDirective } from 'mdast-util-directive';
 
 const props = defineProps<
   {
-    node:ExtendedRootContent,
-    parent:ExtendedRootContent|null,
+    node:RootContent|Root,
+    parent:RootContent|Root|null,
     blocktype:string[]|null
   }
 >()
@@ -36,7 +35,7 @@ const noChild = computed(()=>{
   return !('children' in props.node)
 })
 
-const textdirective2Element = (node:ExtendedRootContent&TextDirective) => {
+const textdirective2Element = (node:Parent&TextDirective) => {
   switch(node.name){
     case 'div':
     case 'flex':{

@@ -5,7 +5,6 @@ import { ref } from 'vue';
 import { useResumeSrcStore } from '@/stores/resume';
 import MdAstNode from '@/components/MdAstNode.vue';
 import type { RootContent } from 'mdast';
-import type { ExtendedRootContent } from '@/components/type';
 import IconPicker from '@/components/IconPicker.vue';
 
 
@@ -176,7 +175,7 @@ const scaleDown = ()=>{
   </div>
   <NScrollbar>
     <div class="resume">
-      <MdAstNode :node="<ExtendedRootContent><unknown>store.resume_ast" :parent="null"></MdAstNode>
+      <MdAstNode :node="store.resume_ast" :parent="null" :blocktype="[]"></MdAstNode>
     </div>
 
     <!-- <VuePapers :margin-between="2" :padding-top="2" :padding-bottom="2" >

@@ -4,7 +4,12 @@ import { computed, ref } from "vue";
 
 export const useUserStore = defineStore('user',()=>{
 
+  const isOfflineMode = ref(true)
+
   const islogin = computed(()=>{
+    if(isOfflineMode.value){
+      return true
+    }
     return false
   })
 

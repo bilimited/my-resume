@@ -1,13 +1,12 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { Heading, Text } from 'mdast'
+import type { Heading, Root, Text } from 'mdast'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 
 import {directive} from 'micromark-extension-directive'
 import {directiveFromMarkdown} from 'mdast-util-directive'
 
 import type { RootContent } from 'mdast'
-import type { ExtendedRootContent } from '@/components/type'
 import { insertString, replaceString } from '@/utils/str'
 
 interface SelectionOffset {
@@ -92,7 +91,7 @@ export const useResumeSrcStore = defineStore('resumesrc', () => {
           isUnderH1 = false
         }
       }else{
-        (<ExtendedRootContent>i).isUnderH1 = isUnderH1
+        (<RootContent>i).isUnderH1 = isUnderH1
       }
     }
 
@@ -100,11 +99,11 @@ export const useResumeSrcStore = defineStore('resumesrc', () => {
   } )
 
   // 当前鼠标指针位于的node
-  const selected_node = ref<ExtendedRootContent|null>(null)
+  const selected_node = ref<RootContent|Root|null>(null)
   // 当前鼠标指针元素到根节点的所有type
   const selected_node_blockType = ref<string[]>([])
   // 当前鼠标指向节点的父节点  史山，无需多言
-  const selected_node_parent = ref<ExtendedRootContent|null>(null)
+  const selected_node_parent = ref<RootContent|Root|null>(null)
 
   const last_selected_offset = ref<SelectionOffset>(null)
 
@@ -129,7 +128,7 @@ export const useResumeSrcStore = defineStore('resumesrc', () => {
     }
   }
 
-  function updateNode(node: RootContent, newText: string) {
+  function updateNode(node: RootContent|Root, newText: string) {
 
     if (node.type === 'text' || node.type === 'inlineCode') {
       node = <Text>node;
