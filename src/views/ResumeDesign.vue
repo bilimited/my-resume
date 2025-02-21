@@ -4,6 +4,15 @@ import '../assets/global.css'
 import 'vditor/dist/index.css';
 //import MarkdownEditor from './MarkdownEditor.vue';
 import ResumePreview from './ResumePreview.vue';
+import { useRoute } from 'vue-router';
+import { onMounted } from 'vue';
+import { useResumeSrcStore } from '@/stores/resume';
+
+const route = useRoute();
+const store = useResumeSrcStore()
+onMounted(()=>{
+    store.sync(Number(route.params.id))
+})
 
 </script>
 

@@ -6,14 +6,23 @@ import { useResumeSrcStore } from '@/stores/resume';
 import MdAstNode from '@/components/MdAstNode.vue';
 import type { RootContent } from 'mdast';
 import IconPicker from '@/components/IconPicker.vue';
+import UploadImage from '@/components/UploadImage.vue';
+
+import VueDragResize from "vue-drag-resize/src";
+import globalConfig from '@/globalConfig';
+import DragComponent from '@/components/DragComponent.vue';
+import ResizeableComponent from '@/components/ResizeableComponent.vue';
+import { useResumeStyleStore } from '@/stores/resumr_style';
 
 
 // const focusItemId = ref('0')
 const store = useResumeSrcStore()
+const style = useResumeStyleStore()
 
 const insertHeaderLevel = ref(1)
 
 const showIconPicker = ref(false)
+const showImageUploader = ref(false)
 const onPickGlyph = (glyph)=>{
   console.log("Picked",glyph);
   store.insertIcon(glyph)
@@ -27,22 +36,36 @@ const onClickIconPicker = ()=>{
   showIconPicker.value = true
 }
 
-const scalesize = ref(1)
+//const scalesize = ref(1)
 
 const scalestep = 0.15
 
 const scaleUp = ()=>{
-  console.log("scale:",scalesize.value);
+  //console.log("scale:",scalesize.value);
 
-  scalesize.value += scalestep
+  store.scalesize += scalestep
 }
 
 const scaleDown = ()=>{
-  console.log("scale:",scalesize.value);
-  if(scalesize.value-scalestep<0){
+  //console.log("scale:",scalesize.value);
+  if(store.scalesize-scalestep<0){
     return
   }
-  scalesize.value -= scalestep
+  store.scalesize -= scalestep
+}
+
+const photo = ref(
+  globalConfig.BASE_API + `file/image/photo/${store.metadata.photoid}.png`
+)
+
+function onPhotoUpload(){
+  //使用时间戳强行刷新img
+  photo.value += "?t=" + new Date().getTime();
+}
+
+function onPhotoMove(x:number,y:number){
+  style.photo.x = x
+  style.photo.y = y
 }
 
 </script>
@@ -50,6 +73,10 @@ const scaleDown = ()=>{
 <template>
     <NModal v-model:show="showIconPicker">
       <IconPicker @onselect="onPickGlyph"></IconPicker>
+    </NModal>
+
+    <NModal v-model:show="showImageUploader">
+      <UploadImage @uploaded="onPhotoUpload" ></UploadImage>
     </NModal>
 
     <div class="scale-buttons">
@@ -139,7 +166,7 @@ const scaleDown = ()=>{
 
       <NTooltip trigger="hover" style="background-color: white;color: black;">
         <template #trigger>
-          <button>
+          <button @click="showImageUploader=true">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
               <path
                 d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14L6 17h12l-3.86-5.14z"
@@ -147,7 +174,7 @@ const scaleDown = ()=>{
             </svg>
           </button>
         </template>
-        插入图片
+        插入证件照
       </NTooltip>
       <NTooltip trigger="hover" style="background-color: white;color: black;">
         <template #trigger>
@@ -174,8 +201,16 @@ const scaleDown = ()=>{
       </NTooltip>
   </div>
   <NScrollbar>
-    <div class="resume">
+    <div id="resume" class="resume" >
+
       <MdAstNode :node="store.resume_ast" :parent="null" :blocktype="[]"></MdAstNode>
+      <!-- <VueDragResize :isResizable="false" :isActive="true" :x="store.metadata.photox" :y="store.metadata.photoy">
+        <img :src="globalConfig.BASE_API + `file/image/photo/${store.metadata.photoid}.webp`" />
+      </VueDragResize> -->
+
+      <DragComponent :x="style.photo.x" :y="style.photo.y" @onmove="onPhotoMove">
+        <img :src="photo" />
+      </DragComponent>
     </div>
 
     <!-- <VuePapers :margin-between="2" :padding-top="2" :padding-bottom="2" >
@@ -213,6 +248,7 @@ const scaleDown = ()=>{
 .resume{
   font-size: 13px;
   font-family: 'sans' sans-serif;
+  position: relative;
 
   width: 710px;
   aspect-ratio: 21/29.7;
@@ -223,7 +259,7 @@ const scaleDown = ()=>{
   margin-bottom: 50px;
   padding: 30px;
 
-  transform: scale(v-bind("scalesize"));
+  transform: scale(v-bind("store.scalesize"));
   transition: transform 0.2s;
 }
 

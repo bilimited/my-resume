@@ -1,8 +1,7 @@
 <template>
-  <div class="app-header">
     <div class="header">
       <div class="header-left">
-        <NButton v-if="path.includes('design')"  style="margin-top: 4px;margin-right: 14px;" circle>
+        <NButton v-if="path.includes('design')" @click="GoBack" style="margin-top: 4px;margin-right: 14px;" circle>
           <template #icon >
             <NIcon>
               <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
@@ -16,19 +15,26 @@
 
         <nav>
           <ul>
-            <li class="title" @click="selectOption(HOME_PAGE)" :class="{ active: path==='/'||path==='/home' }">My-Resume</li>
-            <li @click="selectOption(CODE_EDITOR)" :class="{ active: path === '/design/code' }">简历制作</li>
-            <li @click="selectOption(STYLE_EDITOR)" :class="{ active: path === '/design/style' }">样式编辑</li>
+            <input class="title" v-model="store.resume_name"/>
+            <li @click="selectOption(CODE_EDITOR)" :class="{ active: path.includes('code') }">简历制作</li>
+            <li @click="selectOption(STYLE_EDITOR)" :class="{ active: path.includes('style') }">样式编辑</li>
+            <li @click="selectOption(THEME_EDITOR)" :class="{ active: path.includes('theme') }">主题编辑器</li>
           </ul>
         </nav>
       </div>
 
 
-      <div v-if="userStore.islogin" class="info">
-        <span>简历已变更请及时保存</span>
-        <span>累计导出 {{ 233 }} 份</span>
-        <NButton :bordered="false" class="btn" type="primary">保存</NButton>
-        <NButton :bordered="false" class="btn" type="primary">导出</NButton>
+      <div v-if="userStore.islogin && store.resume_id != null" class="info">
+
+        <div  v-if="!store.is_saved" style="height: 10px;width: 10px;background-color: orange;border-radius: 15px;margin-right: 10px;"></div>
+        <span v-if="!store.is_saved">简历已变更请及时保存</span>
+        <div  v-if="store.is_saved" style="height: 10px;width: 10px;background-color: greenyellow; border-radius: 15px;margin-right: 10px;"></div>
+        <span v-if="store.is_saved">简历已保存</span>
+        <NButton :bordered="false" class="btn" type="primary" @click="store.saveAndSync">保存</NButton>
+        <NDropdown :options="exportOptions" @select="handleSelectExportOptions">
+          <NButton :bordered="false" class="btn" type="primary">导出</NButton>
+        </NDropdown>
+
 
         <NButton @click="console.log(store.resume_ast);printSyntaxTree(store.resume_ast)" :bordered="false" class="btn" type="primary">解析markdown</NButton>
       </div>
@@ -37,13 +43,12 @@
         <NButton :bordered="false" class="btn" type="primary" @click="userStore.openLoginModal()">登录</NButton>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
-import { NButton, NIcon } from 'naive-ui';
+import { NButton, NDropdown, NIcon, useMessage } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue';
-import '../assets/global.css'
+import '@/assets/global.css'
 import { useResumeSrcStore } from '@/stores/resume';
 import { printSyntaxTree } from '@/markdownparser';
 import { useRouter } from 'vue-router';
@@ -51,11 +56,12 @@ import { useUserStore } from '@/stores/user';
 
 const router = useRouter()
 const userStore = useUserStore()
-
+window['$message'] = useMessage()
 
 const HOME_PAGE = "home"
 const CODE_EDITOR = "code";
-const STYLE_EDITOR = "style"
+const STYLE_EDITOR = "style";
+const THEME_EDITOR = "theme";
 
 const store = useResumeSrcStore()
 const activeOption = ref(HOME_PAGE)
@@ -77,15 +83,58 @@ const selectOption = (option: string) => {
       break;
     }
     case CODE_EDITOR:{
-      router.push({path:"/design/code"});
+      router.push({path:`/design/${store.resume_id}/code/`});
       break;
     }
     case STYLE_EDITOR:{
-      router.push({path:"/design/style"});
+      router.push({path:`/design/${store.resume_id}/style/`});
+      break;
+    }
+    case THEME_EDITOR:{
+      router.push({path:`/design/${store.resume_id}/theme/`});
       break;
     }
   }
 }
+
+const exportOptions = [
+  {
+    label:"PNG",
+    key:'png'
+  },{
+    label:"MD",
+    key:'md'
+  },{
+    label:"PDF",
+    key:'pdf'
+  }
+]
+
+function handleSelectExportOptions(key:string){
+  switch(key){
+    case "png":{
+      store.toImg();
+      break;
+    }
+    case "md":{
+      store.toMd();
+      break;
+    }
+    case "pdf":{
+      store.toPdf();
+      break;
+    }
+  }
+}
+
+async function GoBack(){
+
+  router.push("/profile")
+  await store.saveAndSync()
+  store.close()
+
+}
+
 </script>
 
 <style scoped>
@@ -97,14 +146,6 @@ const selectOption = (option: string) => {
 
 .btnhide{
   width: 0px;
-}
-
-.app-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-
 }
 
 .header {
@@ -152,8 +193,12 @@ const selectOption = (option: string) => {
 }
 
 .title {
-  margin-top: -8px;
-  font-size: x-large;
+  background-color: #0000;
+  color: white;
+  border: none;
+  width: 160px;
+
+  font-size: large;
   font-weight: bolder;
 }
 

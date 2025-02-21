@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { reactive, ref, type CSSProperties } from "vue";
 
 type SupportedElements = "h1"|"h2"|"h3"|"span"|"ol"|"ul"|"b"
 
@@ -10,8 +10,23 @@ interface ElementStyle {
   font_size:number
   font_weight:number
   font:string[]|string
-  // color
+  // color?:string
+  // bg_color?:string
+  // margin_left?:number
   // underline?:boolean
+}
+
+interface ResumeStyle {
+  style: Record<SupportedElements,ElementStyle>
+  isH1Centered:boolean
+  themeColor:string
+  lineDistance:number
+  theme:Record<string,CSSProperties>
+  photo:{
+    x:number,
+    y:number,
+    scale:number
+  }
 }
 
 export const useResumeStyleStore = defineStore('resume-store',()=>{
@@ -97,12 +112,50 @@ export const useResumeStyleStore = defineStore('resume-store',()=>{
   const isH1Centered = ref(true)
   const themeColor = ref("")
   const lineDistance = ref(1.5)
-  const customCSS = ref("")
+
+  const photo = reactive({
+    x:0,
+    y:0,
+    scale:1,
+  })
+
+  const customCSS = ref<Record<string,CSSProperties>>({})
 
   const page = ref({
     margin_left_right: 0,
     margin_top_down:0
   })
+
+  function getStyleJson(){
+    const style:ResumeStyle = {
+      style:styles.value,
+      isH1Centered:isH1Centered.value,
+      themeColor:themeColor.value,
+      lineDistance:lineDistance.value,
+      theme:customCSS.value, //customCSS.value,
+      photo,
+    }
+
+    return JSON.stringify(style)
+  }
+
+  function loadStyleJson(json:string){
+    const obj:ResumeStyle = JSON.parse(json)
+    console.log("同步Style:", obj);
+
+    styles.value = obj.style
+    isH1Centered.value = obj.isH1Centered
+    themeColor.value = obj.themeColor
+    lineDistance.value= obj.lineDistance
+    photo.x = obj.photo.x;
+    photo.y = obj.photo.y;
+    photo.scale = obj.photo.scale;
+
+    customCSS.value = obj.theme
+
+
+
+  }
 
   return {
     styles,
@@ -111,7 +164,10 @@ export const useResumeStyleStore = defineStore('resume-store',()=>{
     page,
     lineDistance,
     customCSS,
-    fontOptions
+    fontOptions,
+    photo,
+    getStyleJson,
+    loadStyleJson,
   }
 
 })

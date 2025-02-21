@@ -2,7 +2,7 @@
 import { useResumeSrcStore } from '@/stores/resume';
 import hashIt from 'hash-it';
 import type { Parent, Root, RootContent } from 'mdast';
-import { computed, ref, useTemplateRef, watch } from 'vue';
+import { computed, ref, useTemplateRef, watch, type CSSProperties } from 'vue';
 import { useResumeStyleStore } from '@/stores/resumr_style';
 import type { TextDirective } from 'mdast-util-directive';
 
@@ -33,6 +33,26 @@ const isFocus = ref(false)
 
 const noChild = computed(()=>{
   return !('children' in props.node)
+})
+
+const canDel = computed(()=>{
+  const type = props.node.type
+  const bt = blockType.value;
+  const depth = bt.length;
+  if([
+      'heading',
+      'listItem',
+      'paragraph'
+    ].indexOf(type) != -1
+  ){
+    return true;
+  }
+
+  if(type == 'paragraph' && depth == 2 ){
+    return true;
+  }
+
+  return false
 })
 
 const textdirective2Element = (node:Parent&TextDirective) => {
@@ -108,6 +128,12 @@ function getClass() {
 
   }
   return cls
+}
+
+function getStyle():CSSProperties{
+  console.log(stylestore.customCSS);
+
+  return stylestore.customCSS[elementType.value] ?? {}
 }
 
 // KeyDown 比 Input 有更高的优先级。 如果在keydown里执行了ev.preventDefault()，则input事件不会发出。
@@ -212,12 +238,12 @@ const isTextElement = computed(()=>props.node.type==='text' || props.node.type==
 </script>
 
 <template>
-  <component :is="elementType" :class="getClass()" @mouseover="onMouseover" @mouseleave="onMouseleave">
+  <component :is="elementType" :class="getClass()" :style="getStyle()" @mouseover="onMouseover" @mouseleave="onMouseleave">
     <template v-if="'children' in props.node">
       <MdAstNode  v-for="node in props.node.children" :node="node" :parent="props.node"  :key="getNodeKey(node)" :blocktype="blockType"></MdAstNode>
     </template><span ref="content" v-if="isTextElement" @keydown="handleKeyDown" @input="textInput" @blur="onBlur" @focus="onFocus" contenteditable>  {{ textContent }}</span>
 
-    <button @click="deleteThis" class="del-button" v-show="isMouseOn && noChild">
+    <button @click="deleteThis" class="del-button" v-show="isMouseOn && canDel">
     </button>
   </component>
 
@@ -294,6 +320,7 @@ h1 {
   justify-self: v-bind("stylestore.isH1Centered?'center':'start'");
   margin-top: v-bind("stylestore.styles.h1.margin_top+'px'");
   margin-bottom: v-bind("stylestore.styles.h1.margin_bottom+'px'");
+
 }
 
 h1 span{

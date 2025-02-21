@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user';
+import { MsgErr, MsgInfo } from '@/utils/message';
 import { NButton, NForm, NFormItem, NInput, NModal, type FormRules } from 'naive-ui';
 import { ref, useTemplateRef } from 'vue';
+import Service from './api';
+import router from '@/router';
 
 const userStore = useUserStore()
 
@@ -71,7 +74,16 @@ function onClickLoginButton(){
     formRef.value.validate((err)=>{
       if(!err){
         console.log("SUCCESS");
+        Service.postLogin({
+          phone:modelLogin.value.phone,
+          password:modelLogin.value.password
+        }).then(()=>{
+          userStore.isLogModelOpen = false
+          userStore.refleshLoginState()
+          MsgInfo("登录成功！")
+          router.push(userStore.nextPathBeforeLogin)
 
+        })
       }else{
         console.log("FAIL");
 
@@ -86,11 +98,24 @@ function onClickRegistryButton(){
   }else{
     formRegistryRef.value.validate((err)=>{
       if(!err){
-        console.log("SUCCESS");
+        Service.postRegistery({
+          phone:ModelRegistry.value.phone,
+          password:ModelRegistry.value.password,
+          username:ModelRegistry.value.username
+        }).then(()=>{
+          MsgInfo("注册成功！")
+          Service.postLogin({
+          phone:modelLogin.value.phone,
+          password:modelLogin.value.password
+          }).then(()=>{
+            userStore.refleshLoginState()
+            router.push(userStore.nextPathBeforeLogin)
+          })
+
+        })
 
       }else{
-        console.log("FAIL");
-
+        MsgErr("格式不正确！")
       }
     })
   }
@@ -144,7 +169,7 @@ function onClickRegistryButton(){
 
     <div v-if="mode=='registry'" class="btns">
       <NButton @click="onClickLoginButton">去登录</NButton>
-      <NButton type="primary" @click="onClickRegistryButton">注册</NButton>
+      <NButton type="primary" @click="onClickRegistryButton">注册并登录</NButton>
     </div>
 
   </div>

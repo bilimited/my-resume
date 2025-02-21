@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import AppHeader from './views/AppHeader.vue';
-import { darkTheme, NConfigProvider, NModal } from 'naive-ui'
+import AppHeader from './views/headers/AppHeader.vue';
+import { darkTheme, NConfigProvider, NDialogProvider, NMessageProvider } from 'naive-ui'
 import './assets/global.css'
-import { useUserStore } from './stores/user';
-import UserLogin from './views/user/UserLogin.vue';
+import UserLogin from './views/login/UserLogin.vue';
+import { onUnmounted } from 'vue';
 
 // const themeOverrides = {
 //     common: {
@@ -13,28 +13,30 @@ import UserLogin from './views/user/UserLogin.vue';
 
 //const userStore = useUserStore()
 
+onUnmounted(() => {
+  console.log("寄了！");
+
+})
+
 </script>
 
 <template>
   <NConfigProvider :theme="darkTheme">
-    <UserLogin></UserLogin>
-    <AppHeader></AppHeader>
-
-    <RouterView class="router-view"></RouterView>
-
-
+    <NDialogProvider>
+      <NMessageProvider>
+        <UserLogin></UserLogin>
+        <AppHeader></AppHeader>
+        <RouterView class="router-view"></RouterView>
+      </NMessageProvider>
+    </NDialogProvider>
   </NConfigProvider>
-
 </template>
 
 <style scoped>
-
 .router-view {
   width: 100%;
   margin-top: var(--header-height);
   margin-left: auto;
   margin-right: auto;
 }
-
-
 </style>

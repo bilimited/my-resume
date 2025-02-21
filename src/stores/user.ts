@@ -1,17 +1,27 @@
+import globalConfig from "@/globalConfig";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
 
 export const useUserStore = defineStore('user',()=>{
 
-  const isOfflineMode = ref(true)
+  // 用于强行更新computed
+  const __forceUpdate = ref(0)
+  const refleshLoginState = () => {
+    __forceUpdate.value++
+  }
 
   const islogin = computed(()=>{
-    if(isOfflineMode.value){
+    if(globalConfig.OFFLINE){
       return true
     }
-    return false
+    if(__forceUpdate.value<-1){
+      return false
+    }
+    return sessionStorage.getItem('auth') != null
   })
+
+  const nextPathBeforeLogin = ref('/')
 
   const isLogModelOpen = ref(false)
 
@@ -24,7 +34,9 @@ export const useUserStore = defineStore('user',()=>{
   return {
     islogin,
     isLogModelOpen,
-    openLoginModal
+    nextPathBeforeLogin,
+    openLoginModal,
+    refleshLoginState
   }
 
 })

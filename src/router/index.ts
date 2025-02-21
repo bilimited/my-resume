@@ -6,6 +6,8 @@ import StyleDesign from '@/views/StyleDesign.vue';
 import Vue3IconPicker from '@/components/IconPicker.vue';
 import HomePage from '../views/HomePage.vue';
 import { useUserStore } from '@/stores/user';
+import MyResume from '@/views/MyResume.vue';
+import ThemeDesign from '@/views/ThemeDesign.vue';
 
 const router = createRouter({
 
@@ -18,16 +20,23 @@ const router = createRouter({
         path: '/home', component: HomePage
       },
       {
-        path:"/design", component: ResumeDesign, name:'design',
+        path:'/profile',component:MyResume, name:'profile'
+      },
+      {
+        path:"/design/:id/", component: ResumeDesign, name:'design',
         children:[
           {
             path:'', redirect: 'design/code'
           },
+
           {
             path:"code",component: MarkdownEditor, name: 'code',
           },
           {
             path:"style",component: StyleDesign, name: 'style',
+          },
+          {
+            path:"theme",component: ThemeDesign, name: 'theme',
           }
         ]
       },
@@ -51,6 +60,11 @@ router.beforeEach((to,from,next)=>{
   }
   else if(to.path == '/login' || (!store.islogin && whitelist.indexOf(to.path) == -1)){
     store.openLoginModal()
+
+    if(to.path != '/login'){
+      store.nextPathBeforeLogin = to.path
+    }
+
     next({
       path:from.path
     })

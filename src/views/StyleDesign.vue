@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useResumeStyleStore } from '@/stores/resumr_style';
-import { NAnchor, NAnchorLink, NInputNumber, NScrollbar, NSelect, NSlider, NSwitch } from 'naive-ui';
+import { NInputNumber, NScrollbar, NSelect, NSlider, NSwitch } from 'naive-ui';
 import { ref, watch } from 'vue';
 
 const store = useResumeStyleStore();
@@ -17,13 +17,13 @@ watch(allfont,(val)=>{
 <template>
   <div style="display: flex;">
 
-    <NAnchor class="anchor" style="color: aliceblue;" show-rail>
+    <!-- <NAnchor class="anchor" style="color: aliceblue;" show-rail>
       <NAnchorLink title="基础设置" href="#basic"></NAnchorLink>
       <NAnchorLink title="边距及字号" href="#margin-font-size"></NAnchorLink>
       <NAnchorLink title="调整字重" href="#adjust-weight"></NAnchorLink>
       <NAnchorLink title="调整颜色" href="#adjust-color"></NAnchorLink>
       <NAnchorLink title="CSS自定义" href="#custom-css"></NAnchorLink>
-    </NAnchor>
+    </NAnchor> -->
 
     <div class="main">
       <NScrollbar>
@@ -76,12 +76,6 @@ watch(allfont,(val)=>{
             <NInputNumber v-model:value="ele.font_weight" size="small" max="800" min="300"> </NInputNumber>
             <NSelect v-model:value="ele.font" :options="store.fontOptions" size="small"> </NSelect>
           </div>
-
-          <div id="adjust-color"></div>
-          <h2>调整颜色</h2>
-
-          <div id="custom-css"></div>
-          <h2>自定义CSS</h2>
         </div>
 
       </NScrollbar>

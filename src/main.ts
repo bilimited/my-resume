@@ -11,9 +11,19 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
+import VueDragResize from 'vue-drag-resize'
+
+declare module 'mdast' {
+  interface Node {
+    isUnderH1?:boolean,
+    blockType?:keyof RootContentMap[]
+  }
+}
 
 
 const app = createApp(App)
+
+app.component('vue-drag-resize', VueDragResize)
 
 app.use(createPinia())
 app.use(router)

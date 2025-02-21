@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type { Heading, Root, Text } from 'mdast'
 import { fromMarkdown } from 'mdast-util-from-markdown'
@@ -8,71 +8,46 @@ import {directiveFromMarkdown} from 'mdast-util-directive'
 
 import type { RootContent } from 'mdast'
 import { insertString, replaceString } from '@/utils/str'
+import Service, { type UpdateResumeDto, type UploadResumeDto } from '@/views/api'
+import { useResumeStyleStore } from './resumr_style'
+
+import { ImgTool } from '@/utils/imageTool'
 
 interface SelectionOffset {
   start:number,
   end:number
 }
 
+export interface ResumeMetaData {
+  author:string
+  photoid:number
+  photox:number
+  photoy:number
+  photow:number
+  photoh:number
+}
+
 export const useResumeSrcStore = defineStore('resumesrc', () => {
 
-  const resumesrc = ref(`# 赵笑阳  全栈开发工程师
-:icon{#far_fa-user}男 / 2003-11-17         :icon{#far_fa-envelope}1793678790@qq.com         :icon{#fab_fa-github}github.com/bilimited
-:icon{#far_fa-address-book}16692229056            :icon{#fab_fa-git}gitee.com/bilimited
+  const resumesrc = ref(``);
 
-## :icon{#far_fa-user-circle} 教育背景
+  const is_saved = ref(false);
+  // 简历是否保存
 
-:flex[**河南大学 - 计算机与信息工程学院 - 计算机科学与技术** :div **2021-09-01 至 2025-07-01**]:flex[GPA: 4.0 / 专业TopN]
-
-## :icon{#fab_fa-react}专业技能
-- 编程语言：熟练掌握Java、Python、JavaScript、TypeScript，具备扎实的数据结构与算法基础，熟悉数组、链表、图、栈、队列及其相关算法。
-
-- 后端开发：精通JavaEE技术栈，熟练使用Spring、SpringMVC、MyBatis、SpringBoot等框架，具备良好的后端开发能力。
-
-- 前端开发：熟练掌握Vue框架，深入理解ES6和TypeScript类型机制，熟悉HTML5、CSS3等前端技术，能够独立完成前端页面开发。
-
-- 设计模式与架构：深入理解常见设计模式（如观察者模式、单例模式等），了解软件开发的常用架构模式。
-
-- 数据库：熟悉MySQL事务、锁、索引等机制，了解Redis及其持久化机制，具备数据库优化经验。
-
-- 工具与系统：熟练使用Git进行版本控制，掌握Postman进行接口调试，熟悉Linux操作系统及常用命令。
-
-- 计算机基础：熟悉计算机网络五层模型、计算机组成原理、操作系统等基础知识，深入理解HTTP、HTTPS、TCP、UDP等网络协议。
-
-## :icon{#far_fa-star}奖项荣誉
-- 中国大学生计算机设计大赛 - 全国三等奖（2023）
-
-- 全国大学生智能技术应用大赛 - 全国二等奖（2023）
-
-- 睿抗机器人开发者大赛 - 全国二等奖（2023）
-
-- “挑战杯”中国大学生创业计划大赛 - 省级二等奖（2024）
-
-- 中国国际大学生创新大赛（互联网+）- 省级一等奖（2024）
-
-- 全国三维数字化创新设计大赛 - 全国三等奖（2024）
-
-## :icon{#fab_fa-product-hunt}项目经历
-**开源 - Web端简历制作工具**
-技术栈：\`Vue\` \`Pinia\` \`Node.js\`
-- 项目简介：开发了一款基于Web的简历制作工具，支持Markdown和所见即所得两种编辑模式，用户可将Markdown文本转换为PDF，或直接在预览界面实时编辑，数据实时同步。
-
-- 项目难点：手动实现Markdown解析器，将Markdown语法解析为Vue组件，扩展了Markdown语法，提升了编辑器的用户体验。
-
-**学校 - 前后端分离选课系统**\`全栈开发\`
-技术栈：\`Vue\` \`SpringBoot\` \`MySQL\` \`Redis\`
-- 项目简介：设计并开发了一套前后端分离的选课系统，支持用户登录注册、学生选课、教师课程管理等功能。
-
-- 项目难点：使用JWT令牌技术实现用户认证，结合拦截器进行Token校验，利用Redis管理Token，解决了HTTP请求无状态的问题。
-
-- 项目职责：担任项目组长，负责核心代码编写、接口文档撰写及团队协作，使用Git进行版本控制，并通过Apifox和Mock.js进行接口调试。
-
-**学校 - 天气可视化系统**
-技术栈：\`Python\` \`mayavi\` \`pandas\` \`numpy\` \`scipy\`
-- 项目简介：基于Python开发的气象数据可视化系统，支持读取气象数据、插值处理、生成灰度图并自动输出视频，实现了局部地区气温和降水的动态可视化。
-`)
   // Editor专用的数据源。当updateNode执行时，新数据首先同步到resumesrc_for_editor，按下enter/失去焦点时才会同步到resumesrc，以防止输入任何字符导致失焦。
   const resumesrc_for_editor = ref(resumesrc.value)
+  const resume_id = ref<number|null>(null)
+  const resume_name = ref<string|null>(null)
+  const metadata = ref<ResumeMetaData>({
+    author:"",
+    photoid:673,
+    photox:10,
+    photoy:10,
+    photow:0,
+    photoh:0
+  })
+  const style = useResumeStyleStore();
+  const scalesize = ref(1);
 
   // 获取语法树
   const resume_ast = computed(() =>{
@@ -296,7 +271,112 @@ export const useResumeSrcStore = defineStore('resumesrc', () => {
     selected_node_parent.value = null
   }
 
+  async function saveAndSync(){
+
+    saveChange();
+
+    const thumbnail = await getThumbnail()
+
+    const resume:UpdateResumeDto = {
+      content:resumesrc_for_editor.value,
+      theme: style.getStyleJson(),
+      thumbnail,
+      name:resume_name.value,
+    }
+    console.log(resume);
+
+    if(resume_id.value === null){
+      await Service.uploadResume(resume)
+    }else{
+      await Service.updateResume(resume)
+    }
+
+  }
+
+  // 从云端获得简历。
+  function download(id:number){
+    Service.getResumeById(id,(res)=>{
+      console.log("Resume from Server:",res);
+
+      resume_id.value = id;
+      resumesrc.value = res.content;
+      resume_name.value = res.name;
+      resumesrc_for_editor.value = res.content;
+      is_saved.value = true
+      // TODO: 同步Style等
+      style.loadStyleJson(res.theme);
+    });
+  }
+
+  // 在本地创建新简历。
+  async function createNew(useTheme = null,useContent = null){
+    close();
+    resumesrc_for_editor.value = useContent ?? "";
+    style.customCSS = useTheme ?? "";
+    const thumbnail = await getThumbnail()
+    // 此处使用useContent和useTheme初始化
+    const emptyResume:UploadResumeDto = {
+      content:resumesrc_for_editor.value,
+      theme: style.getStyleJson(),
+      thumbnail,
+    }
+
+    // 本地初始化
+
+
+    // 远端初始化
+    const id = await Service.uploadResume(emptyResume)
+
+
+    saveChange()
+
+    return id;
+  }
+
+  // 关闭当前简历。
+  function close(){
+    resume_id.value = null;
+    saveChange()
+  }
+
+  watch(resumesrc_for_editor,()=>{
+    is_saved.value = false;
+  })
+
+  async function toImg(){
+    const s = scalesize.value;
+    (await new ImgTool(1/s).load()).download(resume_name.value)
+  }
+
+  async function getThumbnail(){
+    const s = scalesize.value;
+    return (await new ImgTool(1/s).loadThumbNail()).data;
+  }
+
+  async function toPdf(){
+    (await new ImgTool(1/scalesize.value).load()).downloadAsPdf(resume_name.value);
+  }
+
+  function toMd(){
+    const url = window.URL;
+    const blob = new Blob([resumesrc_for_editor.value]);
+    const saveLink = document.createElement('a');
+    saveLink.href = url.createObjectURL(blob);
+    // 设置 download 属性
+    saveLink.download = `${resume_name.value}.md`;
+    saveLink.click();
+  }
+
+  // Init
+
+  // if(last_edit_resume_id.value != null){
+  //   console.log(last_edit_resume_id.value);
+
+  //   download(last_edit_resume_id.value);
+  // }
+
   return {
+    resume_name,
     resumesrc,
     resumesrc_for_editor,
     resume_ast,
@@ -304,6 +384,11 @@ export const useResumeSrcStore = defineStore('resumesrc', () => {
     selected_node_blockType,
     selected_node_parent,
     last_selection: last_selected_offset,
+    resume_id,
+    is_saved,
+    scalesize,
+    metadata,
+
     getSelectionOffset,
     saveChange,
     updateNode,
@@ -315,6 +400,15 @@ export const useResumeSrcStore = defineStore('resumesrc', () => {
     insertHeader,
     insertIcon,
     delCurElement,
+
+    saveAndSync,
+    sync: download,
+    createNew,
+    close,
+    toImg,
+    toPdf,
+    toMd,
+    getThumbnail,
   }
 
 })
